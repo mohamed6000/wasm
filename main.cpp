@@ -7,6 +7,10 @@ int add(int a, int b) {
     return a + b;
 }
 
+int wasm_entry_point(void) {
+    return 0;
+}
+
 }
 
 // int main(void) {

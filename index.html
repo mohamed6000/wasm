@@ -7,14 +7,13 @@
 </head>
 <body>
     <script type="module">
+        'use strict';
         (async () => {
-            console.log("JS module async startup...");
-
-            const response = await fetch("add.wasm");
-            const bytes    = await response.arrayBuffer();
-            const { instance } = await WebAssembly.instantiate(bytes);
-            console.log(instance.exports);
-            console.log("add = " + instance.exports.add(34, 35));
+            const wasm = WebAssembly.instantiateStreaming(fetch("main.wasm")).then((obj) => {
+                    console.log(obj.instance.exports.wasm_entry_point());
+                }).catch((err) => {
+                    console.error("Failed to load wasm file: ", err);
+                });
         })();
     </script>
 </body>
