@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WASM</title>
+</head>
+<body>
+    <script type="module">
+        (async () => {
+            console.log("JS module async startup...");
+
+            const response = await fetch("add.wasm");
+            const bytes    = await response.arrayBuffer();
+            const { instance } = await WebAssembly.instantiate(bytes);
+            console.log(instance.exports);
+            console.log("add = " + instance.exports.add(34, 35));
+        })();
+    </script>
+</body>
+</html>
