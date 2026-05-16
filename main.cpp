@@ -21,7 +21,8 @@ int add(int a, int b) {
 }
 
 int wasm_entry_point(void) {
-    wasm_write_string("Hello friend\n", false);
+    wasm_write_string("Hello friend\nTest", false);
+    wasm_write_string("Error", true);
     return 0;
 }
 
