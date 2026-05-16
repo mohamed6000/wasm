@@ -6,15 +6,6 @@
     <title>WASM</title>
 </head>
 <body>
-    <script type="module">
-        'use strict';
-        (async () => {
-            const wasm = WebAssembly.instantiateStreaming(fetch("main.wasm")).then((obj) => {
-                    console.log(obj.instance.exports.wasm_entry_point());
-                }).catch((err) => {
-                    console.error("Failed to load wasm file: ", err);
-                });
-        })();
-    </script>
+    <script src="runtime.js"></script>
 </body>
 </html>
