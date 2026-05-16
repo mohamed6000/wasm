@@ -11,11 +11,21 @@ function wasm_debug_break() {
     debugger;
 }
 
+const js_exported_functions = {
+    wasm_write_string_count,
+    wasm_debug_break,
+};
+
 const imports = {
-    env: {
-        wasm_write_string_count,
-        wasm_debug_break,
-    }
+    env: new Proxy(js_exported_functions, {
+        get(target, prop, receiver) {
+            if (target.hasOwnProperty(prop)) {
+                return target[prop];
+            }
+
+            return () => { throw new Error("Missing function: " + prop); };
+        },
+    }),
 };
 
 WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
