@@ -1,6 +1,24 @@
 // #define NB_STRIP_GENERAL_PREFIX
 // #include "nb.h"
 
+#if defined(__wasm__) || defined(__wasm) || defined(__wasm32__) || defined(__wasm32) || defined(__wasm64__)
+#define OS_WASM 1
+#endif
+
+#if defined(__wasm64__) || defined(__wasm64)
+#define ARCH_WASM64 1
+#elif defined(__wasm32__) || defined(__wasm32)
+#define ARCH_WASM32 1
+#endif
+
+#ifndef ARCH_WASM64
+#define ARCH_WASM64 0
+#endif
+
+#ifndef ARCH_WASM32
+#define ARCH_WASM32 0
+#endif
+
 
 extern "C" {
 
@@ -33,6 +51,16 @@ int add(int a, int b) {
 }
 
 void wasm_entry_point(void) {
+#if OS_WASM
+    wasm_write_string("WASM platform\n", false);
+#endif
+
+#if ARCH_WASM32
+    wasm_write_string("WASM32\n", false);
+#elif ARCH_WASM32
+    wasm_write_string("WASM64\n", false);
+#endif
+
     wasm_write_string("Hello friend\nTest", false);
     wasm_write_string("Error\n", true);
 
