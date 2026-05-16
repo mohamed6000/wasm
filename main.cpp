@@ -50,6 +50,22 @@ int add(int a, int b) {
     return a + b;
 }
 
+extern unsigned char __heap_base;
+
+static unsigned char *bump_pointer = &__heap_base;
+
+typedef unsigned long size_t;
+
+void *basic_malloc(size_t size) {
+    void *result = bump_pointer;
+    bump_pointer += size;
+    return result;
+}
+
+void basic_free(void *mem) {
+    (void)(mem);
+}
+
 void wasm_entry_point(void) {
 #if OS_WASM
     wasm_write_string("WASM platform\n", false);
@@ -61,12 +77,16 @@ void wasm_entry_point(void) {
     wasm_write_string("WASM64\n", false);
 #endif
 
-    wasm_write_string("Hello friend\nTest", false);
-    wasm_write_string("Error\n", true);
+    char *p = (char *)basic_malloc(12+1);
+    char msg[] = "Hello friend";
+    for (int i = 0; i < 12; ++i) {
+        p[i] = msg[i];
+    }
+    p[12] = 0;
+    wasm_write_string(p, false);
+    wasm_write_string("\n", false);
 
-    basic_assert(!"Test assert condition");
-
-    wasm_write_string("continue program\n", false);
+    basic_free(p);
 }
 
 }
