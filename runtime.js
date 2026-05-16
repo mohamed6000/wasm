@@ -12,7 +12,7 @@ function wasm_debug_break() {
 }
 
 const js_exported_functions = {
-    wasm_write_string_count,
+    // wasm_write_string_count,
     wasm_debug_break,
 };
 
@@ -23,7 +23,10 @@ const imports = {
                 return target[prop];
             }
 
-            return () => { throw new Error("Missing function: " + prop); };
+            return (...args) => { 
+                console.error("Missing function: ", prop, args);
+                throw new Error("Missing function: " + prop);
+            };
         },
     }),
 };
