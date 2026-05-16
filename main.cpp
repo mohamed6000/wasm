@@ -50,6 +50,7 @@ int add(int a, int b) {
     return a + b;
 }
 
+
 extern unsigned char __heap_base;
 
 static unsigned char *bump_pointer = &__heap_base;
@@ -66,6 +67,7 @@ void basic_free(void *mem) {
     (void)(mem);
 }
 
+__attribute((export_name("wasm_entry_point")))
 void wasm_entry_point(void) {
 #if OS_WASM
     wasm_write_string("WASM platform\n", false);
