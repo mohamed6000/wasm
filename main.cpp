@@ -79,6 +79,11 @@ void wasm_entry_point(void) {
     wasm_write_string("WASM64\n", false);
 #endif
 
+    // Address 0 is valid for WASM runtime.
+    // So we compile with -fsanitize=undefined -fsanitize-trap for clang.
+    int *pointer = 0;
+    *pointer = 0xFF;
+
     char *p = (char *)basic_malloc(12+1);
     char msg[] = "Hello friend";
     for (int i = 0; i < 12; ++i) {
