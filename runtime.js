@@ -12,7 +12,7 @@ function wasm_debug_break() {
 }
 
 const js_exported_functions = {
-    // wasm_write_string_count,
+    wasm_write_string_count,
     wasm_debug_break,
 };
 
@@ -35,6 +35,7 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     allocated = obj.instance.exports.memory;
     const heap_base = obj.instance.exports.__heap_base.value;
     console.log("The heap starts at address: ", heap_base);
+    
     obj.instance.exports.wasm_entry_point();
 }).catch((err) => {
     console.error("Failed to load wasm file: ", err);

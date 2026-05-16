@@ -4,8 +4,31 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>WASM</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            background-color: #000000;
+
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+            padding: 0;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translate(0, -50%);
+        }
+    </style>
 </head>
 <body>
+    <canvas id="game-canvas" width="640" height="480"></canvas>
     <script src="runtime.js"></script>
 </body>
 </html>
