@@ -1,6 +1,8 @@
 "use strict";
 
 let allocated = null;
+let full_window_canvas = false;
+
 
 function wasm_write_string_count(s, count, to_standard_error) {
     const u8 = js_string_from_cstring(s, count);
@@ -35,11 +37,43 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     allocated = obj.instance.exports.memory;
     const heap_base = obj.instance.exports.__heap_base.value;
     console.log("The heap starts at address: ", heap_base);
-    
+
+    // let screen_width  = document.documentElement.clientWidth;
+    // let screen_height = document.documentElement.clientHeight;
+    // console.log("Screen ", screen_width, "x", screen_height);
+
+    // window.addEventListener("load", canvas_resize, false);
+    window.addEventListener("resize", canvas_resize, false);
+
     obj.instance.exports.wasm_entry_point();
 }).catch((err) => {
     console.error("Failed to load wasm file: ", err);
 });
+    window.addEventListener("load", canvas_resize, false);
+
+
+function canvas_resize() {
+    const canvas = document.getElementById("game-canvas");
+    
+    if (full_window_canvas) {
+        canvas.style.width  = window.innerWidth  + "px";
+        canvas.style.height = window.innerHeight + "px";
+    } else {
+        let ratio = canvas.width / canvas.height;
+        let canvas_height = window.innerHeight;
+        let canvas_width  = canvas_height * ratio;
+
+        if (canvas_width > window.innerWidth) {
+            canvas_width  = window.innerWidth;
+            canvas_height = canvas_width / ratio;
+        }
+
+        // console.log("Canvas: ", canvas_width, "x", canvas_height, "ratio: ", ratio);
+
+        canvas.style.width  = canvas_width  + "px";
+        canvas.style.height = canvas_height + "px";
+    }
+}
 
 
 
