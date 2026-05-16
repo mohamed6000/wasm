@@ -7,9 +7,14 @@ function wasm_write_string_count(s, count, to_standard_error) {
     js_write_to_console_buffer(u8, to_standard_error);
 }
 
+function wasm_debug_break() {
+    debugger;
+}
+
 const imports = {
     env: {
         wasm_write_string_count,
+        wasm_debug_break,
     }
 };
 
@@ -19,6 +24,7 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
 }).catch((err) => {
     console.error("Failed to load wasm file: ", err);
 });
+
 
 
 const text_decoder = new TextDecoder();

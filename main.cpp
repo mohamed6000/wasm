@@ -6,6 +6,18 @@ extern "C" {
 
 extern void wasm_write_string_count(const char *s, int count, bool to_standard_error);
 
+extern void wasm_debug_break(void);
+
+#define STRINGIFY(x) STRINGIFY2(x)
+#define STRINGIFY2(x) #x
+
+#define basic_assert(expr) do { \
+    if (!(expr)) { \
+        wasm_write_string("Assertion Failure: " STRINGIFY(expr) " at " __FILE__ ":" STRINGIFY(__LINE__) "\n", true); \
+        wasm_debug_break(); \
+    } \
+} while (0)
+
 void wasm_write_string(const char *s, bool to_standard_error) {
     const char *it = s;
 
@@ -20,10 +32,13 @@ int add(int a, int b) {
     return a + b;
 }
 
-int wasm_entry_point(void) {
+void wasm_entry_point(void) {
     wasm_write_string("Hello friend\nTest", false);
-    wasm_write_string("Error", true);
-    return 0;
+    wasm_write_string("Error\n", true);
+
+    basic_assert(!"Test assert condition");
+
+    wasm_write_string("continue program\n", false);
 }
 
 }
