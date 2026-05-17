@@ -67,6 +67,13 @@ void basic_free(void *mem) {
     (void)(mem);
 }
 
+__attribute((export_name("process_one_frame")))
+bool process_one_frame(float dt) {
+    
+    
+    return true;
+}
+
 __attribute((export_name("wasm_entry_point")))
 void wasm_entry_point(void) {
 #if OS_WASM

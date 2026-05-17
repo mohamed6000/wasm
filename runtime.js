@@ -34,8 +34,9 @@ const imports = {
 };
 
 WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
-    allocated = obj.instance.exports.memory;
-    const heap_base = obj.instance.exports.__heap_base.value;
+    const wasm = obj.instance;
+    allocated = wasm.exports.memory;
+    const heap_base = wasm.exports.__heap_base.value;
     console.log("The heap starts at address: ", heap_base);
 
     // let screen_width  = document.documentElement.clientWidth;
@@ -65,6 +66,33 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
 
 
     obj.instance.exports.wasm_entry_point();
+
+
+    // Main loop.
+    if (wasm.exports.process_one_frame) {
+        let last_time = undefined;
+
+        function loop(timestamp) {
+            if (last_time == undefined) {
+                last_time = timestamp;
+            }
+
+            const dt = (timestamp - last_time) * 0.001;
+            last_time = timestamp;
+
+            if (!wasm.exports.process_one_frame(dt)) {
+                // @Todo: cleanup...
+                return;
+            }
+
+            window.requestAnimationFrame(loop);
+        }
+
+        // Kick-start the main loop.
+        window.requestAnimationFrame(loop);
+    }
+
+    // @Todo: cleanup...
 }).catch((err) => {
     console.error("Failed to load wasm file: ", err);
 });
