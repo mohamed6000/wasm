@@ -26,6 +26,14 @@ extern void wasm_write_string_count(const char *s, int count, bool to_standard_e
 
 extern void wasm_debug_break(void);
 
+extern float wasm_canvas_get_width(void);
+extern float wasm_canvas_get_height(void);
+extern void wasm_canvas_get_size(float result_pointer[2]);
+
+extern void context2d_clear_render_target(float r, float g, float b, float a);
+
+extern void context2d_draw_quad(float x0, float y0, float x1, float y1, float r, float g, float b, float a);
+
 #define STRINGIFY(x) STRINGIFY2(x)
 #define STRINGIFY2(x) #x
 
@@ -69,8 +77,27 @@ void basic_free(void *mem) {
 
 __attribute((export_name("process_one_frame")))
 bool process_one_frame(float dt) {
+    static float x = 0;
+
+    context2d_clear_render_target(1,1,1,1);
+
+    // float w = wasm_canvas_get_width();
+    // float h = wasm_canvas_get_height();
+
+    float size[2];
+    wasm_canvas_get_size(size);
+    float w = size[0];
+    float h = size[1];
+
+    float x0 = w * 0.1f;
+    float y0 = h * 0.1f;
+    float x1 = w * 0.9f;
+    float y1 = h * 0.9f;
+    context2d_draw_quad(x0, y0, x1, y1, 0,0,1,1);
     
-    
+    x += 100 * dt;
+    context2d_draw_quad(x, 10, x+10, 20, 1,0,0,1);
+
     return true;
 }
 

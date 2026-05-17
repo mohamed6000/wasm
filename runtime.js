@@ -2,7 +2,40 @@
 
 let allocated = null;
 let full_window_canvas = false;
+let canvas = null;
+let ctx = null;
 
+
+function context2d_init(canvas_id) {
+    canvas = document.getElementById(canvas_id);
+    ctx = canvas.getContext("2d");
+    if (ctx == null) {
+        throw new Error("Could not create 2D context");
+    }
+}
+
+function context2d_clear_render_target(r, g, b, a) {
+    ctx.fillStyle = "rgba(" + (r*255) + "," + (g*255) + "," + (b*255) + "," + a + ")";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function context2d_draw_quad(x0, y0, x1, y1, r, g, b, a) {
+    ctx.fillStyle = "rgba(" + (r*255) + "," + (g*255) + "," + (b*255) + "," + a + ")";
+    ctx.fillRect(x0, y0, x1-x0, y1-y0);
+}
+
+
+function wasm_canvas_get_width() {
+    return canvas.width;
+}
+
+function wasm_canvas_get_height() {
+    return canvas.height;
+}
+
+function wasm_canvas_get_size(result_ptr) {
+    new Float32Array(allocated.buffer, result_ptr, 2).set([canvas.width, canvas.height]);
+}
 
 function wasm_write_string_count(s, count, to_standard_error) {
     const u8 = js_string_from_cstring(s, count);
@@ -16,6 +49,11 @@ function wasm_debug_break() {
 const js_exported_functions = {
     wasm_write_string_count,
     wasm_debug_break,
+    wasm_canvas_get_width,
+    wasm_canvas_get_height,
+    wasm_canvas_get_size,
+    context2d_clear_render_target,
+    context2d_draw_quad,
 };
 
 const imports = {
@@ -47,22 +85,7 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     window.addEventListener("resize", canvas_resize, false);
 
 
-    const canvas = document.getElementById("game-canvas");
-    const context_2d = canvas.getContext("2d");
-    if (context_2d == null) {
-        throw new Error("Could not create 2D context");
-    }
-
-    context_2d.fillStyle = "#FFFFFFFF";
-    context_2d.fillRect(0, 0, canvas.width, canvas.height);
-
-    let x0 = 0.1 * canvas.width;
-    let y0 = 0.1 * canvas.height;
-    let w  = canvas.width * 0.8;
-    let h  = canvas.height * 0.8;
-
-    context_2d.fillStyle = "#0000FFFF";
-    context_2d.fillRect(x0, y0, w, h);
+    context2d_init("game-canvas");
 
 
     obj.instance.exports.wasm_entry_point();
