@@ -45,11 +45,31 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     // window.addEventListener("load", canvas_resize, false);
     window.addEventListener("resize", canvas_resize, false);
 
+
+    const canvas = document.getElementById("game-canvas");
+    const context_2d = canvas.getContext("2d");
+    if (context_2d == null) {
+        throw new Error("Could not create 2D context");
+    }
+
+    context_2d.fillStyle = "#FFFFFFFF";
+    context_2d.fillRect(0, 0, canvas.width, canvas.height);
+
+    let x0 = 0.1 * canvas.width;
+    let y0 = 0.1 * canvas.height;
+    let w  = canvas.width * 0.8;
+    let h  = canvas.height * 0.8;
+
+    context_2d.fillStyle = "#0000FFFF";
+    context_2d.fillRect(x0, y0, w, h);
+
+
     obj.instance.exports.wasm_entry_point();
 }).catch((err) => {
     console.error("Failed to load wasm file: ", err);
 });
-    window.addEventListener("load", canvas_resize, false);
+    
+window.addEventListener("load", canvas_resize, false);
 
 
 function canvas_resize() {
