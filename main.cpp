@@ -26,6 +26,8 @@ extern void wasm_write_string_count(const char *s, int count, bool to_standard_e
 
 extern void wasm_debug_break(void);
 
+extern void wasm_entry_point_set(void (*entry)(float));
+
 extern float wasm_canvas_get_width(void);
 extern float wasm_canvas_get_height(void);
 extern void wasm_canvas_get_size(float result_pointer[2]);
@@ -75,8 +77,18 @@ void basic_free(void *mem) {
     (void)(mem);
 }
 
-__attribute((export_name("process_one_frame")))
-bool process_one_frame(float dt) {
+int main(void);
+
+__attribute((export_name("_start")))
+void _start(void) {
+    main();
+}
+
+}
+
+
+
+void update(float dt) {
     static float x = 0;
 
     context2d_clear_render_target(1,1,1,1);
@@ -95,23 +107,11 @@ bool process_one_frame(float dt) {
     
     x += 100 * dt;
     context2d_draw_quad(x, 10, x+10, 20, 1,0,0,1);
-
-    return true;
-}
-
-int main(void);
-
-__attribute((export_name("_start")))
-void _start(void) {
-    main();
-}
-
 }
 
 int main(void) {
     #if OS_WASM
     wasm_write_string("WASM platform\n", false);
-    wasm_write_string("Calling from main\n", false);
 #endif
 
 #if ARCH_WASM32
@@ -137,6 +137,8 @@ int main(void) {
     wasm_write_string("\n", false);
 
     basic_free(p);
+
+    wasm_entry_point_set(update);
 
     return 0;
 }

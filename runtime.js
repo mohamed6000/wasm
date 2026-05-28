@@ -4,6 +4,9 @@ let allocated = null;
 let full_window_canvas = false;
 let canvas = null;
 let ctx = null;
+let entry_point_function = null;
+let wasm_exports = null;
+
 
 
 function context2d_init(canvas_id) {
@@ -25,6 +28,7 @@ function context2d_draw_quad(x0, y0, x1, y1, r, g, b, a) {
 }
 
 
+
 function wasm_canvas_get_width() {
     return canvas.width;
 }
@@ -37,6 +41,10 @@ function wasm_canvas_get_size(result_ptr) {
     new Float32Array(allocated.buffer, result_ptr, 2).set([canvas.width, canvas.height]);
 }
 
+function wasm_entry_point_set(entry) {
+    entry_point_function = wasm_exports.__indirect_function_table.get(entry);
+}
+
 function wasm_write_string_count(s, count, to_standard_error) {
     const u8 = js_string_from_cstring(s, count);
     js_write_to_console_buffer(u8, to_standard_error);
@@ -47,11 +55,13 @@ function wasm_debug_break() {
 }
 
 const js_exported_functions = {
+    wasm_entry_point_set,
     wasm_write_string_count,
     wasm_debug_break,
     wasm_canvas_get_width,
     wasm_canvas_get_height,
     wasm_canvas_get_size,
+    context2d_init,
     context2d_clear_render_target,
     context2d_draw_quad,
 };
@@ -73,6 +83,7 @@ const imports = {
 
 WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     const wasm = obj.instance;
+    wasm_exports = wasm.exports;
     allocated = wasm.exports.memory;
     const heap_base = wasm.exports.__heap_base.value;
     console.log("The heap starts at address: ", heap_base);
@@ -104,27 +115,23 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
 
 
     // Main loop.
-    if (wasm.exports.process_one_frame) {
+    if (entry_point_function) {
         let last_time = undefined;
+        let dt        = undefined;
 
-        function loop(timestamp) {
-            if (last_time == undefined) {
-                last_time = timestamp;
-            }
-
-            const dt = (timestamp - last_time) * 0.001;
+        function next_frame(timestamp) {
+            dt = (timestamp - last_time) * 0.001;
             last_time = timestamp;
 
-            if (!wasm.exports.process_one_frame(dt)) {
-                // @Todo: cleanup...
-                return;
-            }
-
-            window.requestAnimationFrame(loop);
+            entry_point_function(dt);
+            window.requestAnimationFrame(next_frame);
         }
 
         // Kick-start the main loop.
-        window.requestAnimationFrame(loop);
+        window.requestAnimationFrame((timestamp) => {
+            last_time = timestamp;
+            window.requestAnimationFrame(next_frame);
+        });
     }
 
     // @Todo: cleanup...
