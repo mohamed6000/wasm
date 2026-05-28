@@ -6,11 +6,62 @@ let canvas = null;
 let ctx = null;
 let entry_point_function = null;
 let wasm_exports = null;
+let gl = null;
+
+
+
+function webgl_init(canvas_id) {
+    canvas = document.getElementById(canvas_id);
+    if (!canvas) {
+        const elements = document.getElementsByTagName("canvas");
+        if (elements && elements.length) {
+            canvas = elements[0];
+        }
+    }
+
+    if (!canvas) {
+        console.error("Failed to query a canvas element");
+        return;
+    }
+
+    gl = canvas.getContext("webgl");
+    if (!gl) {
+        gl = canvas.getContext("experimental-webgl");
+    }
+
+    if (!gl) {
+        console.error("Failed to init WebGL");
+    }
+
+    console.log("[WebGL] Initialized WebGL version 1.");
+    console.log("[WebGL] Drawing buffer size", gl.drawingBufferWidth, "x", gl.drawingBufferHeight);
+    console.log("[WebGL] Drawing buffer color space:", gl.drawingBufferColorSpace);
+}
+
+function webglClearColor(r, g, b, a) {
+    gl.clearColor(r, g, b, a);
+}
+
+function webglClear(clear_flag) {
+    gl.clear(clear_flag);
+}
 
 
 
 function context2d_init(canvas_id) {
     canvas = document.getElementById(canvas_id);
+    if (!canvas) {
+        const elements = document.getElementsByTagName("canvas");
+        if (elements && elements.length) {
+            canvas = elements[0];
+        }
+    }
+
+    if (!canvas) {
+        console.error("Failed to query a canvas element");
+        return;
+    }
+
     ctx = canvas.getContext("2d");
     if (ctx == null) {
         throw new Error("Could not create 2D context");
@@ -61,9 +112,12 @@ const js_exported_functions = {
     wasm_canvas_get_width,
     wasm_canvas_get_height,
     wasm_canvas_get_size,
-    context2d_init,
+    
     context2d_clear_render_target,
     context2d_draw_quad,
+
+    webglClearColor,
+    webglClear,
 };
 
 const imports = {
@@ -96,17 +150,21 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     window.addEventListener("resize", canvas_resize, false);
 
 
-    context2d_init("game-canvas");
+    // context2d_init("game-canvas");
+    webgl_init();
+    console.log(canvas);
     
-    canvas.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-    }, false);
-    canvas.addEventListener("keydown", (e) => {
-        e.preventDefault();
-    }, false);
-    canvas.addEventListener("mousedown", (e) => {
-        e.target.focus();
-    }, false);
+    if (canvas) {
+        canvas.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+        }, false);
+        canvas.addEventListener("keydown", (e) => {
+            e.preventDefault();
+        }, false);
+        canvas.addEventListener("mousedown", (e) => {
+            e.target.focus();
+        }, false);
+    }
 
 
     if (wasm.exports._start) {

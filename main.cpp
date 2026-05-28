@@ -22,6 +22,17 @@
 
 extern "C" {
 
+// WebGL constants.
+#define WEBGL_COLOR_BUFFER_BIT 16384
+#define WEBGL_DEPTH_BUFFER_BIT 256
+#define WEBGL_STENCIL_BUFFER_BIT 1024
+
+// WebGL functions.
+void webglClearColor(float r, float g, float b, float a);
+void webglClear(int clear_flags);
+
+
+
 extern void wasm_write_string_count(const char *s, int count, bool to_standard_error);
 
 extern void wasm_debug_break(void);
@@ -88,7 +99,7 @@ void _start(void) {
 
 
 
-void update(float dt) {
+void update_2d(float dt) {
     static float x = 0;
 
     context2d_clear_render_target(1,1,1,1);
@@ -107,6 +118,11 @@ void update(float dt) {
     
     x += 100 * dt;
     context2d_draw_quad(x, 10, x+10, 20, 1,0,0,1);
+}
+
+void update(float dt) {
+    webglClearColor(0.3, 0.3, 0.3, 1);
+    webglClear(WEBGL_COLOR_BUFFER_BIT);
 }
 
 int main(void) {
