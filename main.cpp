@@ -81,11 +81,9 @@ bool process_one_frame(float dt) {
 
     context2d_clear_render_target(1,1,1,1);
 
-    // float w = wasm_canvas_get_width();
-    // float h = wasm_canvas_get_height();
-
     float size[2];
     wasm_canvas_get_size(size);
+
     float w = size[0];
     float h = size[1];
 

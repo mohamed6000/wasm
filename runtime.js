@@ -64,7 +64,7 @@ const imports = {
             }
 
             return (...args) => { 
-                console.error("Missing function: ", prop, args);
+                console.error("Missing function: ", prop, args, "Did you forget to add it to the imports?");
                 throw new Error("Missing function: " + prop);
             };
         },
@@ -86,6 +86,16 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
 
 
     context2d_init("game-canvas");
+    
+    canvas.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+    }, false);
+    canvas.addEventListener("keydown", (e) => {
+        e.preventDefault();
+    }, false);
+    canvas.addEventListener("mousedown", (e) => {
+        e.target.focus();
+    }, false);
 
 
     obj.instance.exports.wasm_entry_point();
