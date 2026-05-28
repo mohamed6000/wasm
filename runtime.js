@@ -7,6 +7,12 @@ let ctx = null;
 let entry_point_function = null;
 let wasm_exports = null;
 let gl = null;
+let webgl_last_error = null;
+
+const webgl_state = {
+    programs: [],
+    shaders: [],
+};
 
 
 
@@ -24,18 +30,83 @@ function webgl_init(canvas_id) {
         return;
     }
 
-    gl = canvas.getContext("webgl");
-    if (!gl) {
-        gl = canvas.getContext("experimental-webgl");
-    }
+    const context_settings = {
+        alpha: true,
+        antialias: true,
+        depth: true,
+        stencil: false,
+        premultipliedAlpha: true,
+        preserveDrawingBuffer: false,
+        powerPreference: "default", // "high-performance", "low-power"
+        failIfMajorPerformanceCaveat: false,
+    };
+    gl = canvas.getContext("webgl", context_settings) || canvas.getContext("experimental-webgl", context_settings);
 
     if (!gl) {
         console.error("Failed to init WebGL");
     }
 
-    console.log("[WebGL] Initialized WebGL version 1.");
+    console.log("[WebGL] Initialized WebGL.");
+    console.log("[WebGL] API Version:", gl.getParameter(0x1F02));
+    console.log("[WebGL] GLSL Version:", gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
     console.log("[WebGL] Drawing buffer size", gl.drawingBufferWidth, "x", gl.drawingBufferHeight);
     console.log("[WebGL] Drawing buffer color space:", gl.drawingBufferColorSpace);
+    console.log(gl.getContextAttributes());
+    console.log(gl.getSupportedExtensions());
+}
+
+function webglIsExtensionSupported(name_pointer, name_count) {
+    let u8 = js_string_from_cstring(name_pointer, name_count);
+    let extensions = gl.getSupportedExtensions();
+    return extensions.indexOf(u8) !== -1;
+}
+
+function js_record_last_error(error_code) {
+    webgl_last_error || (webgl_last_error = error_code);
+}
+
+function webglGetError() {
+    let e = webgl_last_error;
+    js_record_last_error(0);
+    if (e) return e;
+
+    return gl.getError();
+}
+
+function webglGetWebGLVersion(major_pointer, minor_pointer) {
+    let version = gl.getParameter(0x1F02);
+    let memory_view = new Uint32Array(allocated.buffer);
+
+    if (version.indexOf("WebGL 2.0") !== -1) {
+        memory_view[major_pointer >> 2] = 2;
+        memory_view[minor_pointer >> 2] = 0;
+        return;
+    }
+
+    memory_view[major_pointer >> 2] = 1;
+    memory_view[minor_pointer >> 2] = 0;
+}
+
+function webglGetESVersion(major_pointer, minor_pointer) {
+    let version = gl.getParameter(0x1F02);
+    let memory_view = new Uint32Array(allocated.buffer);
+
+    if (version.indexOf("OpenGL ES 3.0") !== -1) {
+        memory_view[major_pointer >> 2] = 3;
+        memory_view[minor_pointer >> 2] = 0;
+        return;
+    }
+
+    memory_view[major_pointer >> 2] = 2;
+    memory_view[minor_pointer >> 2] = 0;
+}
+
+function webglDrawingBufferWidth() {
+    return gl.drawingBufferWidth;
+}
+
+function webglDrawingBufferHeight() {
+    return gl.drawingBufferHeight;
 }
 
 function webglClearColor(r, g, b, a) {
@@ -44,6 +115,22 @@ function webglClearColor(r, g, b, a) {
 
 function webglClear(clear_flag) {
     gl.clear(clear_flag);
+}
+
+function webglActiveTexture(tex) {
+    gl.activeTexture(tex);
+}
+
+function webglAttachShader(program, shader) {
+    gl.attachShader(webgl_state.programs[program], webgl_state.shaders[shader]);
+}
+
+function webglClearDepth(depth) {
+    gl.clearDepth(depth);
+}
+
+function webglClearStencil(s) {
+    gl.clearStencil(s);
 }
 
 
@@ -116,8 +203,18 @@ const js_exported_functions = {
     context2d_clear_render_target,
     context2d_draw_quad,
 
+    webglIsExtensionSupported,
+    webglGetError,
+    webglGetWebGLVersion,
+    webglGetESVersion,
+    webglDrawingBufferWidth,
+    webglDrawingBufferHeight,
     webglClearColor,
     webglClear,
+    webglActiveTexture,
+    webglAttachShader,
+    webglClearDepth,
+    webglClearStencil,
 };
 
 const imports = {
@@ -152,7 +249,6 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
 
     // context2d_init("game-canvas");
     webgl_init();
-    console.log(canvas);
     
     if (canvas) {
         canvas.addEventListener("contextmenu", (e) => {
