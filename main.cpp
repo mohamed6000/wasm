@@ -99,10 +99,19 @@ bool process_one_frame(float dt) {
     return true;
 }
 
-__attribute((export_name("wasm_entry_point")))
-void wasm_entry_point(void) {
-#if OS_WASM
+int main(void);
+
+__attribute((export_name("_start")))
+void _start(void) {
+    main();
+}
+
+}
+
+int main(void) {
+    #if OS_WASM
     wasm_write_string("WASM platform\n", false);
+    wasm_write_string("Calling from main\n", false);
 #endif
 
 #if ARCH_WASM32
@@ -128,14 +137,9 @@ void wasm_entry_point(void) {
     wasm_write_string("\n", false);
 
     basic_free(p);
-}
 
+    return 0;
 }
-
-// int main(void) {
-    // write_string("Hello friend\n");
-    // return 0;
-// }
 
 
 

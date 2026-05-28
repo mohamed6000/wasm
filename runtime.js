@@ -98,7 +98,9 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     }, false);
 
 
-    obj.instance.exports.wasm_entry_point();
+    if (wasm.exports._start) {
+        wasm.exports._start();
+    }
 
 
     // Main loop.
