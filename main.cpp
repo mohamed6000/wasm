@@ -491,6 +491,9 @@ void webglActiveTexture(GLuint tex);
 void webglAttachShader(GLuint program, GLuint shader);
 void webglClearDepth(GLclampf depth);
 void webglClearStencil(GLint s);
+void webglColorMask(bool r, bool g, bool b, bool a);
+void webglCompileShader(GLuint shader);
+GLuint webglCreateBuffer(void);
 
 bool webglIsExtensionSupported(const char *name_pointer, int name_count);
 int webglGetError(void);

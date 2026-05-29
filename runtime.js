@@ -12,6 +12,8 @@ let webgl_last_error = null;
 const webgl_state = {
     programs: [],
     shaders: [],
+    buffers: [],
+    counter: 0,
 };
 
 
@@ -63,6 +65,13 @@ function webglIsExtensionSupported(name_pointer, name_count) {
 
 function js_record_last_error(error_code) {
     webgl_last_error || (webgl_last_error = error_code);
+}
+
+function webgl_get_new_id(table) {
+    for (var ret = webgl_state.counter++, i = table.length; i < ret; ++i) {
+        table[i] = null;
+    }
+    return ret;
 }
 
 function webglGetError() {
@@ -131,6 +140,27 @@ function webglClearDepth(depth) {
 
 function webglClearStencil(s) {
     gl.clearStencil(s);
+}
+
+function webglColorMask(r, g, b, a) {
+    gl.colorMask(!!r, !!g, !!b, !!a);
+}
+
+function webglCompileShader(shader) {
+    gl.compileShader(webgl_state.shaders[shader]);
+}
+
+function webglCreateBuffer() {
+    let buffer = gl.createBuffer();
+    if (!buffer) {
+        js_record_last_error(1282);
+        return 0;
+    }
+
+    let id = webgl_get_new_id(webgl_state.buffers);
+    buffer.name = id;
+    webgl_state.buffers[id] = buffer;
+    return id;
 }
 
 
@@ -215,6 +245,9 @@ const js_exported_functions = {
     webglAttachShader,
     webglClearDepth,
     webglClearStencil,
+    webglColorMask,
+    webglCompileShader,
+    webglCreateBuffer,
 };
 
 const imports = {
