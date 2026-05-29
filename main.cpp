@@ -500,6 +500,8 @@ GLuint webglCreateRenderbuffer(void);
 GLuint webglCreateShader(GLuint shader_type);
 GLuint webglCreateTexture(void);
 
+GLuint webglCullFace(GLuint mode);
+
 bool webglIsExtensionSupported(const char *name_pointer, int name_count);
 int webglGetError(void);
 void webglGetWebGLVersion(unsigned int *major, unsigned int *minor);

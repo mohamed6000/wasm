@@ -211,6 +211,10 @@ function webglCreateTexture() {
     return id;
 }
 
+function webglCullFace(mode) {
+    gl.cullFace(mode);
+}
+
 
 
 function context2d_init(canvas_id) {
@@ -301,6 +305,7 @@ const js_exported_functions = {
     webglCreateRenderbuffer,
     webglCreateShader,
     webglCreateTexture,
+    webglCullFace,
 };
 
 const imports = {
