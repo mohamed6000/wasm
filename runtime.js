@@ -14,6 +14,7 @@ const webgl_state = {
     program_infos: [],
     shaders: [],
     buffers: [],
+    uniforms: [],
     textures: [],
     framebuffers: [],
     renderbuffers: [],
@@ -432,6 +433,116 @@ function webglPolygonOffset(factor, units) {
     gl.polygonOffset(factor, units);
 }
 
+function webglRenderbufferStorage(target, internal_format, width, height) {
+    gl.renderbufferStorage(target, internal_format, width, height);
+}
+
+function webglSampleCoverage(value, invert) {
+    gl.sampleCoverage(value, invert);
+}
+
+function webglScissor(x, y, width, height) {
+    gl.scissor(x, y, width, height);
+}
+
+function webglStencilFunc(func, ref, mask) {
+    gl.stencilFunc(func, ref, mask);
+}
+
+function webglStencilFuncSeparate(face, func, ref, mask) {
+    gl.stencilFuncSeparate(face, func, ref, mask);
+}
+
+function webglStencilMask(mask) {
+    gl.stencilMask(mask);
+}
+
+function webglStencilMaskSeparate(face, mask) {
+    gl.stencilMaskSeparate(face, mask);
+}
+
+function webglStencilOp(fail, zfail, zpass) {
+    gl.stencilOp(fail, zfail, zpass);
+}
+
+function webglStencilOpSeparate(face, fail, zfail, zpass) {
+    gl.stencilOpSeparate(face, fail, zfail, zpass);
+}
+
+function webglTexParameterf(target, pname, param) {
+    gl.texParameterf(target, pname, param);
+}
+
+function webglTexParameteri(target, pname, param) {
+    gl.texParameteri(target, pname, param);
+}
+
+function webglUniform1f(location, v0) {
+    gl.uniform1f(webgl_state.uniforms[location], v0);
+}
+
+function webglUniform2f(location, v0, v1) {
+    gl.uniform2f(webgl_state.uniforms[location], v0, v1);
+}
+
+function webglUniform3f(location, v0, v1, v2) {
+    gl.uniform3f(webgl_state.uniforms[location], v0, v1, v2);
+}
+
+function webglUniform4f(location, v0, v1, v2, v3) {
+    gl.uniform4f(webgl_state.uniforms[location], v0, v1, v2, v3);
+}
+
+function webglUniform1i(location, v0) {
+    gl.uniform1i(webgl_state.uniforms[location], v0);
+}
+
+function webglUniform2i(location, v0, v1) {
+    gl.uniform2i(webgl_state.uniforms[location], v0, v1);
+}
+
+function webglUniform3i(location, v0, v1, v2) {
+    gl.uniform3i(webgl_state.uniforms[location], v0, v1, v2);
+}
+
+function webglUniform4i(location, v0, v1, v2, v3) {
+    gl.uniform4i(webgl_state.uniforms[location], v0, v1, v2, v3);
+}
+
+function webglUseProgram(program) {
+    if (program)
+        gl.useProgram(webgl_state.programs[program]);
+}
+
+function webglValidateProgram(program) {
+    if (program)
+        gl.validateProgram(webgl_state.programs[program]);
+}
+
+function webglVertexAttrib1f(index, x) {
+    gl.vertexAttrib1f(index, x);
+}
+
+function webglVertexAttrib2f(index, x, y) {
+    gl.vertexAttrib2f(index, x, y);
+}
+
+function webglVertexAttrib3f(index, x, y, z) {
+    gl.vertexAttrib3f(index, x, y, z);
+}
+
+function webglVertexAttrib4f(index, x, y, z, w) {
+    gl.vertexAttrib4f(index, x, y, z, w);
+}
+
+function webglVertexAttribPointer(index, size, type, normalized, stride, pointer) {
+    gl.vertexAttribPointer(index, size, type, !!normalized, stride, pointer);
+}
+
+function webglViewport(x, y, w, h) {
+    gl.viewport(x, y, w, h);
+}
+
 
 
 function context2d_init(canvas_id) {
@@ -562,6 +673,33 @@ const js_exported_functions = {
     webglLineWidth,
     webglPixelStorei,
     webglPolygonOffset,
+    webglRenderbufferStorage,
+    webglSampleCoverage,
+    webglScissor,
+    webglStencilFunc,
+    webglStencilFuncSeparate,
+    webglStencilMask,
+    webglStencilMaskSeparate,
+    webglStencilOp,
+    webglStencilOpSeparate,
+    webglTexParameterf,
+    webglTexParameteri,
+    webglUniform1f,
+    webglUniform2f,
+    webglUniform3f,
+    webglUniform4f,
+    webglUniform1i,
+    webglUniform2i,
+    webglUniform3i,
+    webglUniform4i,
+    webglUseProgram,
+    webglValidateProgram,
+    webglVertexAttrib1f,
+    webglVertexAttrib2f,
+    webglVertexAttrib3f,
+    webglVertexAttrib4f,
+    webglVertexAttribPointer,
+    webglViewport,
 };
 
 const imports = {
