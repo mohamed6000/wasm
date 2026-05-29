@@ -11,6 +11,7 @@ let webgl_last_error = null;
 
 const webgl_state = {
     programs: [],
+    program_infos: [],
     shaders: [],
     buffers: [],
     textures: [],
@@ -263,6 +264,174 @@ function webglDeleteTexture(id) {
     }
 }
 
+function webglDepthFunc(func) {
+    gl.depthFunc(func);
+}
+
+function webglDepthMask(flag) {
+    gl.depthMask(!!flag);
+}
+
+function webglDepthRange(near_z, far_z) {
+    gl.depthRange(near_z, far_z);
+}
+
+function webglDetachShader(program, shader) {
+    gl.detachShader(webgl_state.programs[program], webgl_state.shaders[shader]);
+}
+
+function webglDisable(cap) {
+    gl.disable(cap);
+}
+
+function webglDisableVertexAttribArray(index) {
+    gl.disableVertexAttribArray(index);
+}
+
+function webglDrawArrays(mode, first, count) {
+    gl.drawArrays(mode, first, count);
+}
+
+function webglDrawElements(mode, count, type, indices) {
+    gl.drawElements(mode, count, type, indices);
+}
+
+function webglEnable(cap) {
+    gl.enable(cap);
+}
+
+function webglEnableVertexAttribArray(index) {
+    gl.enableVertexAttribArray(index);
+}
+
+function webglFinish() {
+    gl.finish();
+}
+
+function webglFlush() {
+    gl.flush();
+}
+
+function webglFramebufferRenderbuffer(target, attachement, renderbuffer_target, renderbuffer) {
+    gl.framebufferRenderbuffer(target, attachement, renderbuffer_target, webgl_state.renderbuffers[renderbuffer]);
+}
+
+function webglFramebufferTexture2D(target, attachement, textarget, texture, level) {
+    gl.framebufferTexture2D(target, attachement, textarget, webgl_state.textures[texture], level);
+}
+
+function webglFrontFace(mode) {
+    gl.frontFace(mode);
+}
+
+function webglGenerateMipmap(target) {
+    gl.generateMipmap(target);
+}
+
+function webglGetAttribLocation(program, name_pointer, name_count) {
+    let name = js_string_from_cstring(name_pointer, name_count);
+    return gl.getAttribLocation(webgl_state.programs[program], name);
+}
+
+function webglGetParameter(pname) {
+    return gl.getParameter(pname);
+}
+
+function webglGetProgramParameter(program, pname) {
+    return gl.getProgramParameter(webgl_state.programs[program], pname);
+}
+
+function webglGetShaderiv(shader, pname, p) {
+    if (p) {
+        let memory_view = new Int32Array(allocated.buffer, p, 1);
+        if (pname == 35716) {
+            let log = gl.getShaderInfoLog(webgl_state.shaders[shader]);
+            if (log == null) {
+                log = "(unknown error)";
+            }
+            memory_view[0] = log.length+1;
+        } else if (pname == 35720) {
+            let source = gl.getShaderSource(webgl_state.shaders[shader]);
+            let source_length = (source == null || source.length == 0) ? 0 : source.length+1;
+            memory_view[0] = source_length;
+        } else {
+            let param = gl.getShaderParameter(webgl_state.shaders[shader], pname);
+            memory_view[0] = param;
+        }
+    } else {
+        js_record_last_error(1282);
+    }
+}
+
+function webglGetUniformLocation(program, name_pointer, name_count) {
+    let name = js_string_from_cstring(name_pointer, name_count);
+    let array_offset = 0;
+    if (name.indexOf("]", name_count-1) !== -1) {
+        let ls = name.lastIndexOf("[");
+        let array_index = name.slice(ls+1, -1);
+        if (array_index.length > 0 && (array_offset = parseInt(array_index)) < 0) {
+            return -1;
+        }
+        name = name.slice(0, ls);
+    }
+
+    var ptable = webgl_state.program_infos[program];
+    if (!ptable) {
+        return -1;
+    }
+
+    var uniform_info = ptable.uniforms[name];
+    return (uniform_info && array_offset < uniform_info[0]) ? uniform_info[1] + array_offset : -1;
+}
+
+function webglGetVertexAttribOffset(index, pname) {
+    return gl.getVertexAttribOffset(index, pname);
+}
+
+function webglHint(target, mode) {
+    gl.hint(target, mode);
+}
+
+function webglIsBuffer(buffer) {
+    return gl.isBuffer(webgl_state.buffers[buffer]);
+}
+
+function webglIsEnabled(cap) {
+    gl.isEnabled(cap);
+}
+
+function webglIsFramebuffer(framebuffer) {
+    return gl.isFramebuffer(webgl_state.framebuffers[framebuffer]);
+}
+
+function webglIsProgram(program) {
+    return gl.isProgram(webgl_state.programs[program]);
+}
+
+function webglIsRenderbuffer(renderbuffer) {
+    return gl.isRenderbuffer(webgl_state.renderbuffers[renderbuffer]);
+}
+
+function webglIsShader(shader) {
+    return gl.isShader(webgl_state.shaders[shader]);
+}
+
+function webglIsTexture(texture) {
+    return gl.isTexture(webgl_state.textures[texture]);
+}
+
+function webglLineWidth(width) {
+    gl.lineWidth(width);
+}
+
+function webglPixelStorei(pname, param) {
+    gl.pixelStorei(pname, param);
+}
+
+function webglPolygonOffset(factor, units) {
+    gl.polygonOffset(factor, units);
+}
+
 
 
 function context2d_init(canvas_id) {
@@ -360,6 +529,39 @@ const js_exported_functions = {
     webglDeleteRenderbuffer,
     webglDeleteShader,
     webglDeleteTexture,
+    webglDepthFunc,
+    webglDepthMask,
+    webglDepthRange,
+    webglDetachShader,
+    webglDisable,
+    webglDisableVertexAttribArray,
+    webglDrawArrays,
+    webglDrawElements,
+    webglEnable,
+    webglEnableVertexAttribArray,
+    webglFinish,
+    webglFlush,
+    webglFramebufferRenderbuffer,
+    webglFramebufferTexture2D,
+    webglFrontFace,
+    webglGenerateMipmap,
+    webglGetAttribLocation,
+    webglGetParameter,
+    webglGetProgramParameter,
+    webglGetShaderiv,
+    webglGetUniformLocation,
+    webglGetVertexAttribOffset,
+    webglHint,
+    webglIsBuffer,
+    webglIsEnabled,
+    webglIsFramebuffer,
+    webglIsProgram,
+    webglIsRenderbuffer,
+    webglIsShader,
+    webglIsTexture,
+    webglLineWidth,
+    webglPixelStorei,
+    webglPolygonOffset,
 };
 
 const imports = {
