@@ -495,6 +495,10 @@ void webglColorMask(bool r, bool g, bool b, bool a);
 void webglCompileShader(GLuint shader);
 GLuint webglCreateBuffer(void);
 GLuint webglCreateFramebuffer(void);
+GLuint webglCreateProgram(void);
+GLuint webglCreateRenderbuffer(void);
+GLuint webglCreateShader(GLuint shader_type);
+GLuint webglCreateTexture(void);
 
 bool webglIsExtensionSupported(const char *name_pointer, int name_count);
 int webglGetError(void);

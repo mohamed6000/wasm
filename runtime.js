@@ -13,7 +13,9 @@ const webgl_state = {
     programs: [],
     shaders: [],
     buffers: [],
+    textures: [],
     framebuffers: [],
+    renderbuffers: [],
     counter: 0,
 };
 
@@ -172,6 +174,43 @@ function webglCreateFramebuffer() {
     return id;
 }
 
+function webglCreateProgram() {
+    let program = gl.createProgram();
+    let id = webgl_get_new_id(webgl_state.programs);
+    program.name = id;
+    webgl_state.programs[id] = program;
+    return id;
+}
+
+function webglCreateRenderbuffer() {
+    let buffer = gl.createRenderbuffer();
+    let id = webgl_get_new_id(webgl_state.renderbuffers);
+    buffer.name = id;
+    webgl_state.renderbuffers[id] = buffer;
+    return id;
+}
+
+function webglCreateShader(shader_type) {
+    let shader = gl.createShader(shader_type);
+    let id = webgl_get_new_id(webgl_state.shaders);
+    shader.name = id;
+    webgl_state.shaders[id] = shader;
+    return id;
+}
+
+function webglCreateTexture() {
+    let texture = gl.createTexture();
+    if (!texture) {
+        js_record_last_error(1282);
+        return 0;
+    }
+
+    let id = webgl_get_new_id(webgl_state.textures);
+    texture.name = id;
+    webgl_state.textures[id] = texture;
+    return id;
+}
+
 
 
 function context2d_init(canvas_id) {
@@ -258,6 +297,10 @@ const js_exported_functions = {
     webglCompileShader,
     webglCreateBuffer,
     webglCreateFramebuffer,
+    webglCreateProgram,
+    webglCreateRenderbuffer,
+    webglCreateShader,
+    webglCreateTexture,
 };
 
 const imports = {
