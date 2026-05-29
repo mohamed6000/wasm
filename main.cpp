@@ -500,7 +500,14 @@ GLuint webglCreateRenderbuffer(void);
 GLuint webglCreateShader(GLuint shader_type);
 GLuint webglCreateTexture(void);
 
-GLuint webglCullFace(GLuint mode);
+void webglCullFace(GLuint mode);
+
+void webglDeleteBuffer(GLuint id);
+void webglDeleteFramebuffer(GLuint id);
+void webglDeleteProgram(GLuint id);
+void webglDeleteRenderbuffer(GLuint id);
+void webglDeleteShader(GLuint id);
+void webglDeleteTexture(GLuint id);
 
 bool webglIsExtensionSupported(const char *name_pointer, int name_count);
 int webglGetError(void);

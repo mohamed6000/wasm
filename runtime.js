@@ -157,7 +157,7 @@ function webglCreateBuffer() {
     let buffer = gl.createBuffer();
     if (!buffer) {
         js_record_last_error(1282);
-        return 0;
+        return -1;
     }
 
     let id = webgl_get_new_id(webgl_state.buffers);
@@ -202,7 +202,7 @@ function webglCreateTexture() {
     let texture = gl.createTexture();
     if (!texture) {
         js_record_last_error(1282);
-        return 0;
+        return -1;
     }
 
     let id = webgl_get_new_id(webgl_state.textures);
@@ -213,6 +213,54 @@ function webglCreateTexture() {
 
 function webglCullFace(mode) {
     gl.cullFace(mode);
+}
+
+function webglDeleteBuffer(id) {
+    let obj = webgl_state.buffers[id];
+    if (obj && id !== -1) {
+        gl.deleteBuffer(obj);
+        webgl_state.buffers[id] = null;
+    }
+}
+
+function webglDeleteFramebuffer(id) {
+    let obj = webgl_state.framebuffers[id];
+    if (obj && id !== -1) {
+        gl.deleteFramebuffer(obj);
+        webgl_state.framebuffers[id] = null;
+    }
+}
+
+function webglDeleteProgram(id) {
+    let obj = webgl_state.programs[id];
+    if (obj && id !== -1) {
+        gl.deleteProgram(obj);
+        webgl_state.programs[id] = null;
+    }
+}
+
+function webglDeleteRenderbuffer(id) {
+    let obj = webgl_state.renderbuffers[id];
+    if (obj && id !== -1) {
+        gl.deleteRenderbuffer(obj);
+        webgl_state.renderbuffers[id] = null;
+    }
+}
+
+function webglDeleteShader(id) {
+    let obj = webgl_state.shaders[id];
+    if (obj && id !== -1) {
+        gl.deleteShader(obj);
+        webgl_state.shaders[id] = null;
+    }
+}
+
+function webglDeleteTexture(id) {
+    let obj = webgl_state.textures[id];
+    if (obj && id !== -1) {
+        gl.deleteTexture(obj);
+        webgl_state.textures[id] = null;
+    }
 }
 
 
@@ -306,6 +354,12 @@ const js_exported_functions = {
     webglCreateShader,
     webglCreateTexture,
     webglCullFace,
+    webglDeleteBuffer,
+    webglDeleteFramebuffer,
+    webglDeleteProgram,
+    webglDeleteRenderbuffer,
+    webglDeleteShader,
+    webglDeleteTexture,
 };
 
 const imports = {
