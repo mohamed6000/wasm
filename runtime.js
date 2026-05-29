@@ -13,6 +13,7 @@ const webgl_state = {
     programs: [],
     shaders: [],
     buffers: [],
+    framebuffers: [],
     counter: 0,
 };
 
@@ -163,6 +164,14 @@ function webglCreateBuffer() {
     return id;
 }
 
+function webglCreateFramebuffer() {
+    let buffer = gl.createFramebuffer();
+    let id = webgl_get_new_id(webgl_state.framebuffers);
+    buffer.name = id;
+    webgl_state.framebuffers[id] = buffer;
+    return id;
+}
+
 
 
 function context2d_init(canvas_id) {
@@ -248,6 +257,7 @@ const js_exported_functions = {
     webglColorMask,
     webglCompileShader,
     webglCreateBuffer,
+    webglCreateFramebuffer,
 };
 
 const imports = {
