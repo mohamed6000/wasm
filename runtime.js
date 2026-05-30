@@ -8,6 +8,7 @@ let entry_point_function = null;
 let wasm_exports = null;
 let gl = null;
 let webgl_last_error = null;
+let integer_size = undefined;
 
 const webgl_state = {
     programs: [],
@@ -77,6 +78,37 @@ function webgl_get_new_id(table) {
         table[i] = null;
     }
     return ret;
+}
+
+function webgl_fill_unifrom_table(program) {
+    let current_program = webgl_state.programs[program];
+    
+    webgl_state.program_infos[program] = {
+        uniforms: {},
+        max_uniform_length: 0,
+        max_attribute_length: -1,
+        max_uniform_block_name_length: -1,
+    };
+
+    for (let ptable = webgl_state.program_infos[program], utable = ptable.uniforms, num_uniforms = gl.getProgramParameter(current_program, gl.ACTIVE_UNIFORMS), i = 0; i < num_uniforms; ++i) {
+        let u = gl.getActiveUniform(current_program, i);
+        let name = u.name;
+        if (ptable.max_uniform_length = Math.max(ptable.max_uniform_length, name.length + 1), name.indexOf("]", name.length - 1) !== -1) {
+            name = name.slice(0, name.lastIndexOf("["));
+        }
+
+        let loc = gl.getUniformLocation(current_program, name);
+        if (loc !== null) {
+            let id = webgl_get_new_id(webgl_state.uniforms);
+            utable[name] = [u.size, id], webgl_state.uniforms[id] = loc;
+            for (let j = 1; j < u.size; ++j) {
+                let n = name + "[" + j + "]";
+                let loc = gl.getUniformLocation(current_program, name);
+                let id = webgl_get_new_id(webgl_state.uniforms);
+                webgl_state.uniforms[id] = loc;
+            }
+        }
+    }
 }
 
 function webglGetError() {
@@ -723,6 +755,8 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     allocated = wasm.exports.memory;
     const heap_base = wasm.exports.__heap_base.value;
     console.log("The heap starts at address: ", heap_base);
+
+    integer_size = 4;
 
     // let screen_width  = document.documentElement.clientWidth;
     // let screen_height = document.documentElement.clientHeight;
