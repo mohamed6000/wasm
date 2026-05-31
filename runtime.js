@@ -135,7 +135,7 @@ class Wasm_Memory {
 
     load_string(pointer, length) {
         const bytes = this.load_bytes(pointer, Number(length));
-        text_decoder.decode(bytes);
+        return text_decoder.decode(bytes);
     }
 
     store_u8(address, value) {
@@ -309,6 +309,24 @@ function webgl_fill_unifrom_table(program) {
             }
         }
     }
+}
+
+function webgl_get_source(count, strings, lengths) {
+    const integer_size = webgl_state.memory.integer_size;
+    let source = "";
+
+    for (let i = 0; i < count; ++i) {
+        let pointer = webgl_state.memory.load_pointer(strings + i * integer_size);
+        let length  = webgl_state.memory.load_pointer(lengths + i * integer_size);
+        console.log(length);
+        // for (; webgl_state.memory.load_u8(pointer+count) != 0; count += 1)
+        // {}
+
+        let s = webgl_state.memory.load_string(pointer, length);
+        source += s;
+    }
+
+    return source;
 }
 
 function webglGetError() {
@@ -677,6 +695,12 @@ function webglScissor(x, y, width, height) {
     gl.scissor(x, y, width, height);
 }
 
+function webglShaderSource(shader, count, strings, lengths) {
+    let source = webgl_get_source(count, strings, lengths);
+    console.log(source);
+    gl.shaderSource(webgl_state.shaders[shader], source);
+}
+
 function webglStencilFunc(func, ref, mask) {
     gl.stencilFunc(func, ref, mask);
 }
@@ -908,6 +932,7 @@ const js_exported_functions = {
     webglRenderbufferStorage,
     webglSampleCoverage,
     webglScissor,
+    webglShaderSource,
     webglStencilFunc,
     webglStencilFuncSeparate,
     webglStencilMask,

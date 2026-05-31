@@ -546,6 +546,7 @@ void webglPolygonOffset(GLfloat factor, GLfloat units);
 void webglRenderbufferStorage(GLenum target, GLenum internal_format, GLint width, GLint height);
 void webglSampleCoverage(GLfloat value, GLboolean invert);
 void webglScissor(GLint x, GLint y, GLint width, GLint height);
+void webglShaderSource(GLuint shader, GLsizei count, const char **strings_pointer, const GLint *length);
 void webglStencilFunc(GLenum func, GLint ref, GLuint mask);
 void webglStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
 void webglStencilMask(GLuint mask);
@@ -765,6 +766,21 @@ int main(void) {
     wasm_write_string("Minor: ");
     write_integer(minor);
     wasm_write_string("\n");
+
+
+
+    GLuint shader = webglCreateShader(WEBGL_FRAGMENT_SHADER);
+    const char *shader_strings[] = {
+        "void main() { gl_Color = vec4(1); }\n",
+        "Hello friend\n",
+        "void main() { gl_Color = vec4(1); }\n",
+    };
+    GLint shader_string_counts[] = {
+        36,
+        13,
+        36
+    };
+    webglShaderSource(shader, 3, shader_strings, shader_string_counts);
 
     webglActiveTexture(WEBGL_TEXTURE0);
 
