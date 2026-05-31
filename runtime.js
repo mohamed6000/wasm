@@ -8,9 +8,9 @@ let entry_point_function = null;
 let wasm_exports = null;
 let gl = null;
 let webgl_last_error = null;
-let integer_size = undefined;
 
 const webgl_state = {
+    memory: null,
     programs: [],
     program_infos: [],
     shaders: [],
@@ -23,8 +23,206 @@ const webgl_state = {
 };
 
 
+class Wasm_Memory {
+    constructor() {
+        this.memory = null;
+        this.integer_size = 4; // Wasm32.
+    }
 
-function webgl_init(canvas_id) {
+    set_integer_size(size) {
+        this.integer_size = size;
+    }
+
+    set_memory(memory) {
+        this.memory = memory;
+    }
+
+    get mem() {
+        return new DataView(this.memory.buffer);
+    }
+
+    load_array_float(address, length) {
+        return new Float32Array(this.memory.buffer, address, length);
+    }
+
+    load_array_float64(address, length) {
+        return new Float64Array(this.memory.buffer, address, length);
+    }
+
+    load_array_u32(address, length) {
+        return new Uint32Array(this.memory.buffer, address, length);
+    }
+
+    load_array_s32(address, length) {
+        return new Int32Array(this.memory.buffer, address, length);
+    }
+
+    load_u8(address) { 
+        return this.mem.getUint8(address);
+    }
+    
+    load_u16(address) {
+        return this.mem.getUint16(address, true);
+    }
+    
+    load_u32(address) {
+        return this.mem.getUint32(address, true);
+    }
+
+    load_u64(address) {
+        const lo = this.mem.getUint32(address + 0, true);
+        const hi = this.mem.getUint32(address + 4, true);
+        return lo + hi*4294967296;
+    }
+
+    load_s8(address) { 
+        return this.mem.getInt8(address);
+    }
+    
+    load_s16(address) {
+        return this.mem.getInt16(address, true);
+    }
+    
+    load_s32(address) {
+        return this.mem.getInt32(address, true);
+    }
+
+    load_s64(address) {
+        const lo = this.mem.getInt32(address + 0, true);
+        const hi = this.mem.getInt32(address + 4, true);
+        return lo + hi*4294967296;
+    }
+
+    load_float(address) {
+        return this.mem.getFloat32(address, true);
+    }
+
+    load_float64(address) {
+        return this.mem.getFloat64(address, true);
+    }
+
+    load_int(address) {
+        if (this.integer_size == 8) {
+            return this.load_s64(address);
+        } else if (this.integer_size == 4) {
+            return this.load_s32(address);
+        } else {
+            throw new Error("Unknown integer_size!");
+        }
+    }
+
+    load_uint(address) {
+        if (this.integer_size == 8) {
+            return this.load_u64(address);
+        } else if (this.integer_size == 4) {
+            return this.load_u32(address);
+        } else {
+            throw new Error("Unknown integer_size!");
+        }
+    }
+
+    load_pointer(address) {
+        return this.load_u32(address);
+    }
+
+    load_bool32(address) {
+        return this.load_u32(address) != 0;
+    }
+
+    load_bytes(pointer, length) {
+        return new Uint8Array(this.memory.buffer, pointer, Number(length));
+    }
+
+    load_string(pointer, length) {
+        const bytes = this.load_bytes(pointer, Number(length));
+        text_decoder.decode(bytes);
+    }
+
+    store_u8(address, value) {
+        this.mem.setUint8(address, value);
+    }
+
+    store_u16(address, value) {
+        this.mem.setUint16(address, value, true);
+    }
+
+    store_u32(address, value) {
+        this.mem.setUint32(address, value, true);
+    }
+
+    store_u64(address, value) {
+        this.mem.setUint32(address + 0, Number(value), true);
+
+        let div = 4294967296;
+        if (typeof value == 'bigint') {
+            div = BigInt(div);
+        }
+
+        this.mem.setUint32(address + 4, Math.floor(Number(value / div)), true);
+    }
+
+    store_s8(address, value) {
+        this.mem.setInt8(address, value);
+    }
+
+    store_s16(address, value) {
+        this.mem.setInt16(address, value, true);
+    }
+
+    store_s32(address, value) {
+        this.mem.setInt32(address, value, true);
+    }
+
+    store_s64(address, value) {
+        this.mem.setUint32(address + 0, Number(value), true);
+
+        let div = 4294967296;
+        if (typeof value == 'bigint') {
+            div = BigInt(div);
+        }
+
+        this.mem.setInt32(address + 4, Math.floor(Number(value / div)), true);
+    }
+
+    store_float(address, value) {
+        this.mem.setFloat32(address, value, true);
+    }
+
+    store_float64(address, value) {
+        this.mem.setFloat64(address, value, true);
+    }
+
+    store_int(address, value) {
+        if (this.integer_size == 8) {
+            this.store_s64(address, value);
+        } else if (this.integer_size == 4) {
+            this.store_s32(address, value);
+        } else {
+            throw new Error("Unknown integer_size!");
+        }
+    }
+
+    store_uint(address, value) {
+        if (this.integer_size == 8) {
+            this.store_u64(address, value);
+        } else if (this.integer_size == 4) {
+            this.store_u32(address, value);
+        } else {
+            throw new Error("Unknown integer_size!");
+        }
+    }
+
+    store_string(address, value) {
+        const src  = new TextEncoder().encode(value);
+        const dest = new Uint8Array(this.memory.buffer, address, src.length);
+        dest.set(src);
+        return src.length;
+    }
+}
+
+
+
+function webgl_init(wasm_memory, canvas_id) {
     canvas = document.getElementById(canvas_id);
     if (!canvas) {
         const elements = document.getElementsByTagName("canvas");
@@ -53,6 +251,8 @@ function webgl_init(canvas_id) {
     if (!gl) {
         console.error("Failed to init WebGL");
     }
+
+    webgl_state.memory = wasm_memory;
 
     console.log("[WebGL] Initialized WebGL.");
     console.log("[WebGL] API Version:", gl.getParameter(0x1F02));
@@ -756,7 +956,9 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
     const heap_base = wasm.exports.__heap_base.value;
     console.log("The heap starts at address: ", heap_base);
 
-    integer_size = 4;
+    const wasm_memory = new Wasm_Memory();
+    wasm_memory.set_integer_size(4);
+    wasm_memory.set_memory(allocated);
 
     // let screen_width  = document.documentElement.clientWidth;
     // let screen_height = document.documentElement.clientHeight;
@@ -767,7 +969,7 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), imports).then((obj) => {
 
 
     // context2d_init("game-canvas");
-    webgl_init();
+    webgl_init(wasm_memory);
     
     if (canvas) {
         canvas.addEventListener("contextmenu", (e) => {
