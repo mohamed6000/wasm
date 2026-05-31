@@ -19,7 +19,7 @@ const webgl_state = {
     textures: [],
     framebuffers: [],
     renderbuffers: [],
-    counter: 0,
+    counter: 1,
 };
 
 
@@ -318,7 +318,6 @@ function webgl_get_source(count, strings, lengths) {
     for (let i = 0; i < count; ++i) {
         let pointer = webgl_state.memory.load_pointer(strings + i * integer_size);
         let length  = webgl_state.memory.load_pointer(lengths + i * integer_size);
-        console.log(length);
         // for (; webgl_state.memory.load_u8(pointer+count) != 0; count += 1)
         // {}
 
@@ -373,20 +372,78 @@ function webglDrawingBufferHeight() {
     return gl.drawingBufferHeight;
 }
 
-function webglClearColor(r, g, b, a) {
-    gl.clearColor(r, g, b, a);
-}
-
-function webglClear(clear_flag) {
-    gl.clear(clear_flag);
-}
-
 function webglActiveTexture(tex) {
     gl.activeTexture(tex);
 }
 
 function webglAttachShader(program, shader) {
     gl.attachShader(webgl_state.programs[program], webgl_state.shaders[shader]);
+}
+
+function webglBindAttribLocation(program, index, name_pointer, name_count) {
+    let name = js_string_from_cstring(name_pointer, name_count);
+    gl.bindAttribLocation(webgl_state.programs[program], index, name);
+}
+
+function webglBindBuffer(target, buffer) {
+    let buffer_object = buffer ? webgl_state.buffers[buffer] : null;
+    if (target == 35051) {
+        gl.currentPixelPackBufferBinding = buffer;
+    } else { 
+        if (target == 35052) {
+            gl.currentPixelUnpackBufferBinding = buffer;
+        }
+
+        gl.bindBuffer(target, buffer_object);
+    }
+}
+
+function webglBindFramebuffer(target, framebuffer) {
+    gl.bindFramebuffer(target, framebuffer ? webgl_state.framebuffers[framebuffer] : null);
+}
+
+function webglBindTexture(target, texture) {
+    gl.bindTexture(target, texture ? webgl_state.textures[texture] : null);
+}
+
+function webglBlendColor(r, g, b, a) {
+    gl.blendColor(r, g, b, a);
+}
+
+function webglBlendEquation(mode) {
+    gl.blendEquation(mode);
+}
+
+function webglBlendFunc(source_factor, dest_factor) {
+    gl.blendFunc(source_factor, dest_factor);
+}
+
+function webglBlendFuncSeparate(src_rgb, dest_rgb, src_alpha, dest_alpha) {
+    gl.blendFuncSeparate(src_rgb, dest_rgb, src_alpha, dest_alpha);
+}
+
+function webglBufferData(target, size, data, usage) {
+    if (data) {
+        gl.bufferData(target, webgl_state.memory.load_bytes(data, size), usage);
+    } else {
+        gl.bufferData(target, size, usage);
+    }
+}
+
+function webglBufferSubData(target, offset, size, data) {
+    if (data) {
+        gl.bufferData(target, offset, webgl_state.memory.load_bytes(data, size));
+    } else {
+        gl.bufferData(target, offset, size, null);
+    }
+}
+
+function webglClear(clear_flag) {
+    gl.clear(clear_flag);
+}
+
+function webglClearColor(r, g, b, a) {
+    gl.clearColor(r, g, b, a);
 }
 
 function webglClearDepth(depth) {
@@ -405,11 +462,35 @@ function webglCompileShader(shader) {
     gl.compileShader(webgl_state.shaders[shader]);
 }
 
+function webglCompressedTexImage2D(target, level, internal_format, width, height, border, image_size, data) {
+    if (data) {
+        gl.compressedTexImage2D(target, level, internal_format, width, height, border, webgl_state.memory.load_bytes(data, image_size));
+    } else {
+        gl.compressedTexImage2D(target, level, internal_format, width, height, border, null);
+    }
+}
+
+function webglCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, image_size, data) {
+    if (data) {
+        gl.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, webgl_state.memory.load_bytes(data, image_size));
+    } else {
+        gl.compressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, null);
+    }
+}
+
+function webglCopyTexImage2D(target, level, internal_format, x, y, width, height, border) {
+    gl.copyTexImage2D(target, level, internal_format, x, y, width, height, border);
+}
+
+function webglCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height) {
+    gl.copyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+}
+
 function webglCreateBuffer() {
     let buffer = gl.createBuffer();
     if (!buffer) {
         js_record_last_error(1282);
-        return -1;
+        return 0;
     }
 
     let id = webgl_get_new_id(webgl_state.buffers);
@@ -454,7 +535,7 @@ function webglCreateTexture() {
     let texture = gl.createTexture();
     if (!texture) {
         js_record_last_error(1282);
-        return -1;
+        return 0;
     }
 
     let id = webgl_get_new_id(webgl_state.textures);
@@ -469,7 +550,7 @@ function webglCullFace(mode) {
 
 function webglDeleteBuffer(id) {
     let obj = webgl_state.buffers[id];
-    if (obj && id !== -1) {
+    if (obj && id !== 0) {
         gl.deleteBuffer(obj);
         webgl_state.buffers[id] = null;
     }
@@ -477,7 +558,7 @@ function webglDeleteBuffer(id) {
 
 function webglDeleteFramebuffer(id) {
     let obj = webgl_state.framebuffers[id];
-    if (obj && id !== -1) {
+    if (obj && id !== 0) {
         gl.deleteFramebuffer(obj);
         webgl_state.framebuffers[id] = null;
     }
@@ -485,7 +566,7 @@ function webglDeleteFramebuffer(id) {
 
 function webglDeleteProgram(id) {
     let obj = webgl_state.programs[id];
-    if (obj && id !== -1) {
+    if (obj && id !== 0) {
         gl.deleteProgram(obj);
         webgl_state.programs[id] = null;
     }
@@ -493,7 +574,7 @@ function webglDeleteProgram(id) {
 
 function webglDeleteRenderbuffer(id) {
     let obj = webgl_state.renderbuffers[id];
-    if (obj && id !== -1) {
+    if (obj && id !== 0) {
         gl.deleteRenderbuffer(obj);
         webgl_state.renderbuffers[id] = null;
     }
@@ -501,7 +582,7 @@ function webglDeleteRenderbuffer(id) {
 
 function webglDeleteShader(id) {
     let obj = webgl_state.shaders[id];
-    if (obj && id !== -1) {
+    if (obj && id !== 0) {
         gl.deleteShader(obj);
         webgl_state.shaders[id] = null;
     }
@@ -509,7 +590,7 @@ function webglDeleteShader(id) {
 
 function webglDeleteTexture(id) {
     let obj = webgl_state.textures[id];
-    if (obj && id !== -1) {
+    if (obj && id !== 0) {
         gl.deleteTexture(obj);
         webgl_state.textures[id] = null;
     }
@@ -592,25 +673,54 @@ function webglGetProgramParameter(program, pname) {
     return gl.getProgramParameter(webgl_state.programs[program], pname);
 }
 
+function webglGetProgramInfoLog(program, max_length, length_pointer, info_log_pointer) {
+    let log = gl.getProgramInfoLog(webgl_state.programs[program]);
+    if (log == null) {
+        log = "(unknown error)";
+    }
+
+    if ((max_length > 0) && info_log_pointer) {
+        let n = Math.min(max_length, log.length);
+        log = log.substring(0, n);
+        webgl_state.memory.load_bytes(info_log_pointer, max_length).set(new TextEncoder().encode(log));
+
+        webgl_state.memory.store_int(length_pointer, n);
+    }
+}
+
+function webglGetShaderInfoLog(shader, max_length, length_pointer, info_log_pointer) {
+    let log = gl.getShaderInfoLog(webgl_state.shaders[shader]);
+    if (log == null) {
+        log = "(unknown error)";
+    }
+
+    if ((max_length > 0) && info_log_pointer) {
+        let n = Math.min(max_length, log.length);
+        log = log.substring(0, n);
+        webgl_state.memory.load_bytes(info_log_pointer, max_length).set(new TextEncoder().encode(log));
+
+        webgl_state.memory.store_int(length_pointer, n);
+    }
+}
+
 function webglGetShaderiv(shader, pname, p) {
     if (p) {
-        let memory_view = new Int32Array(allocated.buffer, p, 1);
         if (pname == 35716) {
             let log = gl.getShaderInfoLog(webgl_state.shaders[shader]);
             if (log == null) {
                 log = "(unknown error)";
             }
-            memory_view[0] = log.length+1;
+            webgl_state.memory.store_int(p, log.length+1);
         } else if (pname == 35720) {
             let source = gl.getShaderSource(webgl_state.shaders[shader]);
             let source_length = (source == null || source.length == 0) ? 0 : source.length+1;
-            memory_view[0] = source_length;
+            webgl_state.memory.store_int(p, source_length);
         } else {
             let param = gl.getShaderParameter(webgl_state.shaders[shader], pname);
-            memory_view[0] = param;
+            webgl_state.memory.store_int(p, param);
         }
     } else {
-        js_record_last_error(1282);
+        js_record_last_error(1281);
     }
 }
 
@@ -620,7 +730,7 @@ function webglGetUniformLocation(program, name_pointer, name_count) {
     if (name.indexOf("]", name_count-1) !== -1) {
         let ls = name.lastIndexOf("[");
         let array_index = name.slice(ls+1, -1);
-        if (array_index.length > 0 && (array_offset = parseInt(array_index)) < 0) {
+        if ((array_index.length > 0) && (array_offset = parseInt(array_index)) < 0) {
             return -1;
         }
         name = name.slice(0, ls);
@@ -632,7 +742,7 @@ function webglGetUniformLocation(program, name_pointer, name_count) {
     }
 
     var uniform_info = ptable.uniforms[name];
-    return (uniform_info && array_offset < uniform_info[0]) ? uniform_info[1] + array_offset : -1;
+    return (uniform_info && (array_offset < uniform_info[0])) ? (uniform_info[1] + array_offset) : -1;
 }
 
 function webglGetVertexAttribOffset(index, pname) {
@@ -675,12 +785,22 @@ function webglLineWidth(width) {
     gl.lineWidth(width);
 }
 
+function webglLinkProgram(program) {
+    gl.linkProgram(webgl_state.programs[program]);
+    webgl_state.program_infos[program] = null;
+    webgl_fill_unifrom_table(program);
+}
+
 function webglPixelStorei(pname, param) {
     gl.pixelStorei(pname, param);
 }
 
 function webglPolygonOffset(factor, units) {
     gl.polygonOffset(factor, units);
+}
+
+function webglReadnPixels(x, y, width, height, format, type, buffer_size, data) {
+    gl.readnPixels(x, y, width, height, format, type, webgl_state.memory.load_bytes(data, buffer_size));
 }
 
 function webglRenderbufferStorage(target, internal_format, width, height) {
@@ -697,7 +817,6 @@ function webglScissor(x, y, width, height) {
 
 function webglShaderSource(shader, count, strings, lengths) {
     let source = webgl_get_source(count, strings, lengths);
-    console.log(source);
     gl.shaderSource(webgl_state.shaders[shader], source);
 }
 
@@ -723,6 +842,18 @@ function webglStencilOp(fail, zfail, zpass) {
 
 function webglStencilOpSeparate(face, fail, zfail, zpass) {
     gl.stencilOpSeparate(face, fail, zfail, zpass);
+}
+
+function webglTexImage2D(target, level, internal_format, width, height, border, format, type, size, data) {
+    if (data) {
+        gl.texImage2D(target, level, internal_format, width, height, border, format, type, webgl_state.memory.load_bytes(data, size));
+    } else {
+        gl.texImage2D(target, level, internal_format, width, height, border, format, type, null);
+    }
+}
+
+function webglTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, size, data) {
+        gl.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, webgl_state.memory.load_bytes(data, size));
 }
 
 function webglTexParameterf(target, pname, param) {
@@ -763,6 +894,21 @@ function webglUniform3i(location, v0, v1, v2) {
 
 function webglUniform4i(location, v0, v1, v2, v3) {
     gl.uniform4i(webgl_state.uniforms[location], v0, v1, v2, v3);
+}
+
+function webglUniformMatrix2fv(location, address) {
+    let array = webgl_state.memory.load_array_float(address, 2*2);
+    gl.uniformMatrix2fv(webgl_state.uniforms[location], false, array);
+}
+
+function webglUniformMatrix3fv(location, address) {
+    let array = webgl_state.memory.load_array_float(address, 3*3);
+    gl.uniformMatrix3fv(webgl_state.uniforms[location], false, array);
+}
+
+function webglUniformMatrix4fv(location, address) {
+    let array = webgl_state.memory.load_array_float(address, 4*4);
+    gl.uniformMatrix4fv(webgl_state.uniforms[location], false, array);
 }
 
 function webglUseProgram(program) {
@@ -875,14 +1021,28 @@ const js_exported_functions = {
     webglGetESVersion,
     webglDrawingBufferWidth,
     webglDrawingBufferHeight,
-    webglClearColor,
-    webglClear,
     webglActiveTexture,
     webglAttachShader,
+    webglBindAttribLocation,
+    webglBindBuffer,
+    webglBindFramebuffer,
+    webglBindTexture,
+    webglBlendColor,
+    webglBlendEquation,
+    webglBlendFunc,
+    webglBlendFuncSeparate,
+    webglBufferData,
+    webglBufferSubData,
+    webglClear,
+    webglClearColor,
     webglClearDepth,
     webglClearStencil,
     webglColorMask,
     webglCompileShader,
+    webglCompressedTexImage2D,
+    webglCompressedTexSubImage2D,
+    webglCopyTexImage2D,
+    webglCopyTexSubImage2D,
     webglCreateBuffer,
     webglCreateFramebuffer,
     webglCreateProgram,
@@ -915,6 +1075,8 @@ const js_exported_functions = {
     webglGetAttribLocation,
     webglGetParameter,
     webglGetProgramParameter,
+    webglGetProgramInfoLog,
+    webglGetShaderInfoLog,
     webglGetShaderiv,
     webglGetUniformLocation,
     webglGetVertexAttribOffset,
@@ -927,8 +1089,10 @@ const js_exported_functions = {
     webglIsShader,
     webglIsTexture,
     webglLineWidth,
+    webglLinkProgram,
     webglPixelStorei,
     webglPolygonOffset,
+    webglReadnPixels,
     webglRenderbufferStorage,
     webglSampleCoverage,
     webglScissor,
@@ -939,6 +1103,8 @@ const js_exported_functions = {
     webglStencilMaskSeparate,
     webglStencilOp,
     webglStencilOpSeparate,
+    webglTexImage2D,
+    webglTexSubImage2D,
     webglTexParameterf,
     webglTexParameteri,
     webglUniform1f,
@@ -949,6 +1115,9 @@ const js_exported_functions = {
     webglUniform2i,
     webglUniform3i,
     webglUniform4i,
+    webglUniformMatrix2fv,
+    webglUniformMatrix3fv,
+    webglUniformMatrix4fv,
     webglUseProgram,
     webglValidateProgram,
     webglVertexAttrib1f,
