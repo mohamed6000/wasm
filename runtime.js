@@ -130,7 +130,8 @@ class Wasm_Memory {
     }
 
     load_bytes(pointer, length) {
-        return new Uint8Array(this.memory.buffer, pointer, Number(length));
+        let array = new Uint8Array(this.memory.buffer, pointer, Number(length));
+        return array;
     }
 
     load_string(pointer, length) {

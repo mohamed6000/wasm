@@ -592,7 +592,7 @@ void webglVertexAttrib1f(GLint index, GLfloat x);
 void webglVertexAttrib2f(GLint index, GLfloat x, GLfloat y);
 void webglVertexAttrib3f(GLint index, GLfloat x, GLfloat y, GLfloat z);
 void webglVertexAttrib4f(GLint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void webglVertexAttribPointer(GLint index, GLintptr size, GLenum type, GLboolean normalized, GLintptr stride, GLuintptr pointer);
+void webglVertexAttribPointer(GLint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
 void webglViewport(GLint x, GLint y, GLint w, GLint h);
 
 bool webglIsExtensionSupported(const char *name_pointer, int name_count);
@@ -734,6 +734,9 @@ void update(float dt) {
 
     float back_buffer_width  = webglDrawingBufferWidth();
     float back_buffer_height = webglDrawingBufferHeight();
+
+    webglViewport(0, 0, back_buffer_width, back_buffer_height);
+    webglDrawArrays(WEBGL_TRIANGLES, 0, 3);
 }
 
 int main(void) {
@@ -792,20 +795,59 @@ int main(void) {
 
 
 
-    GLuint shader = webglCreateShader(WEBGL_FRAGMENT_SHADER);
-    const char *shader_strings[] = {
-        "void main() { gl_Color = vec4(1); }\n",
-        "Hello friend\n",
-        "void main() { gl_Color = vec4(1); }\n",
+    float vertices[] = {
+        -0.5, -0.5, 0.0,
+         0.5, -0.5, 0.0,
+         0.0,  0.5, 0.0,
     };
-    GLint shader_string_counts[] = {
-        36,
-        13,
-        36
-    };
-    webglShaderSource(shader, 3, shader_strings, shader_string_counts);
 
-    webglActiveTexture(WEBGL_TEXTURE0);
+    GLuint vbo = webglCreateBuffer();
+    webglBindBuffer(WEBGL_ARRAY_BUFFER, vbo);
+    webglBufferData(WEBGL_ARRAY_BUFFER, sizeof(vertices), vertices, WEBGL_STATIC_DRAW);
+
+    const char vertex_shader_source[] =
+        "attribute vec3 input_pos;\n"
+        "void main(void) {\n"
+        "   gl_Position = vec4(input_pos, 1.0);\n"
+        "}\n";
+    const char *shader_strings[] = {
+        vertex_shader_source,
+    };
+    GLint shader_lengths[] = {
+        sizeof(vertex_shader_source)-1,
+    };
+
+
+    GLuint vertex_shader = webglCreateShader(WEBGL_VERTEX_SHADER);
+    webglShaderSource(vertex_shader, 1, shader_strings, shader_lengths);
+    webglCompileShader(vertex_shader);
+
+
+    const char fragment_shader_source[] = 
+        "void main(void) {"
+        "   gl_FragColor = vec4(1, 1, 1, 1);"
+        "}\n";
+    shader_strings[0] = fragment_shader_source;
+    shader_lengths[0] = sizeof(fragment_shader_source)-1;
+
+    GLuint fragment_shader = webglCreateShader(WEBGL_FRAGMENT_SHADER);
+    webglShaderSource(fragment_shader, 1, shader_strings, shader_lengths);
+    webglCompileShader(fragment_shader);
+
+
+    GLuint program = webglCreateProgram();
+    webglAttachShader(program, vertex_shader);
+    webglAttachShader(program, fragment_shader);
+
+    webglLinkProgram(program);
+    webglUseProgram(program);
+
+
+    webglBindBuffer(WEBGL_ARRAY_BUFFER, vbo);
+
+    GLint position_loc = webglGetAttribLocation(program, "input_pos", sizeof("input_pos")-1);
+    webglVertexAttribPointer(position_loc, 3, WEBGL_FLOAT, false, 0, 0);
+    webglEnableVertexAttribArray(position_loc);
 
     wasm_entry_point_set(update);
 
